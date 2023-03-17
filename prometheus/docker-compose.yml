@@ -1,0 +1,38 @@
+version: '3'
+
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    user: root
+    volumes:
+      - /home/rsantana/projetos/infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - "host_sendbox" 
+
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    env_file:
+      - ./grafana/config.monitoring
+    networks:
+      - "host_sendbox" 
+
+
+networks:
+  host_sendbox:
+    external: true

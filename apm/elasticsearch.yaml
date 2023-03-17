@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  serviceName: "elasticsearch"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        env:
+        - name: discovery.type
+          value: single-node
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/elasticsearch/data
+        resources:
+              limits:
+                memory: 2Gi    
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: elasticsearch-pv
+
+--- 
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch 
+  labels:
+    service: elasticsearch
+spec:
+  ports:
+  - port: 9200
+    name: client
+  - port: 9300
+    name: nodes
+  selector:
+    app: elasticsearch
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: elasticsearch-pv
+  labels:
+    app: elasticsearch-pv
+    stack: logging
+spec:
+  # storageClassName: standard
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G

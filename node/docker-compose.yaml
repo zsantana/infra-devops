@@ -1,0 +1,13 @@
+version: '3'
+
+  # my-app:
+  # image: ${docker-registry}/my-app:1.0
+  # ports:
+  # - 3000:3000
+services:
+  node:
+    image: "my-app-node:latest"
+    #  - ./:/home/app
+    ports:
+    - 8085:8085
+

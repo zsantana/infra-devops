@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apm-server-secret
+stringData:
+  apm-server.yml: |-
+    apm-server:
+      host: "0.0.0.0:8200"
+
+    output.elasticsearch:
+      hosts: ["elasticsearch"]
+
+    setup.kibana:
+      host: "kibana"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apm-server-config
+data:
+  apm-server.yml: |-
+    apm-server:
+      host: "0.0.0.0:8200"
+
+      rum:
+        enabled: true
+        event_rate.limit: 300
+        event_rate.lru_size: 1000
+        allow_origins: ['*']
+        library_pattern: "node_modules|bower_components|~"
+        exclude_from_grouping: "^/webpack"
+        source_mapping.enabled: true
+        source_mapping.cache.expiration: 5m
+        source_mapping.index_pattern: "apm-*-sourcemap*"
+      frontend:
+        enabled: false
+
+    setup.template.settings:
+      index:
+        number_of_shards: 1
+        codec: best_compression
+
+    output.elasticsearch:
+      hosts: ['${elasticsearch:9200}:${localhost:9200}']
+
+    setup.kibana:
+      host: '${kibana}:${localhost:5601}'
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apm-server
+  labels:
+    app: apm-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apm-server
+  template:
+    metadata:
+      labels:
+        app: apm-server
+    spec:
+      containers:
+      - name: apm-server
+        image: docker.elastic.co/apm/apm-server:7.16.2
+        ports:
+        - containerPort: 8200
+        volumeMounts:
+        - name: apm-server-config
+          mountPath: /usr/share/apm-server/apm-server.yml
+          subPath: apm-server.yml
+        - name: apm-server-secret
+          mountPath: /usr/share/apm-server/config/secret/apm-server.yml
+          subPath: apm-server.yml
+      volumes:
+      - name: apm-server-config
+        configMap:
+          name: apm-server-config
+      - name: apm-server-secret
+        secret:
+          secretName: apm-server-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apm-server
+spec:
+  ports:
+  - port: 8200
+    targetPort: 8200
+    name: http
+    nodePort: 31000
+  selector:
+    app: apm-server
+  type: NodePort

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+spec:
+  selector:
+    matchLabels:
+      app: pgadmin
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+    spec:
+      
+      containers:
+        - name: pgadmin
+          image: dpage/pgadmin4
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: pgadmin-config  
+          volumeMounts:
+            - mountPath: /mnt/minikube/directory/structure/pgadmin
+              name: pgadmin-volume
+          #command: ["/bin/chown", "-R", "5050:80", "/var/lib/pgadmin"]    
+      volumes:
+        - name: pgadmin-volume
+          persistentVolumeClaim:
+            claimName: pgadmin-pvc
+
+---
+
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: pgadmin
+spec:
+  selector:
+    app: pgadmin
+  ports:
+    - port: 80
+      nodePort: 30200
+  type: NodePort

@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+
+  postgres-serv:
+    container_name: postgres
+    hostname: postgres
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    networks: 
+      - observability
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    hostname: pgadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    networks: 
+      - observability
+    volumes:
+      - pgadmin-volume:/var/lib/pgadmin
+    depends_on:
+      - postgres-serv
+
+networks:
+  observability:
+    external: true
+
+volumes:
+  postgres-volume:
+    driver: local
+  pgadmin-volume:
+    driver: local
