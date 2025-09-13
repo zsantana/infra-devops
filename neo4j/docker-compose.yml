@@ -1,0 +1,10 @@
+
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    ports:
+      - "7474:7474"   # HTTP Browser
+      - "7687:7687"   # Bolt
+    volumes:
+      - ${HOME}/neo4j/data:/data

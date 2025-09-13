@@ -13,8 +13,8 @@ services:
       - POSTGRES_DB=postgres
     ports:
       - "5432:5432"
-    networks: 
-      - observability
+#    networks: 
+#      - observability
     volumes:
       - postgres-volume:/var/lib/postgresql/data
 
@@ -28,16 +28,16 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=admin
     ports:
       - "5050:80"
-    networks: 
-      - observability
+#    networks: 
+#      - observability
     volumes:
       - pgadmin-volume:/var/lib/pgadmin
     depends_on:
       - postgres-serv
 
-networks:
-  observability:
-    external: true
+#networks:
+#  observability:
+#    external: true
 
 volumes:
   postgres-volume:
